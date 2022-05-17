@@ -1,0 +1,27 @@
+{
+  "name": "ttt-discord-mute",
+  "version": "1.0.0",
+  "description": "**Server-side only** addon for Garrys Mod",
+  "main": "server/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fabus1184/ttt-discord-mute.git"
+  },
+  "keywords": [
+    "TTT"
+  ],
+  "author": "Fabian",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Fabus1184/ttt-discord-mute/issues"
+  },
+  "homepage": "https://github.com/Fabus1184/ttt-discord-mute#readme",
+  "dependencies": {
+    "async": "^3.2.3",
+    "discord.js": "^11.3.2",
+    "kue": "^0.11.6"
+  }
+}
