@@ -57,7 +57,7 @@ function unmute(gm_player)
 
     if (gm_player) then
 
-        GET(ids[ply:SteamID()], "false",
+        GET(ids[gm_player:SteamID()], "false",
 
                 function(_)
 
