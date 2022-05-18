@@ -20,8 +20,17 @@ const CHANNEL = [];
 
 // init queue
 const Queue = Async.queue((data, callback) => {
-    console.log("Starting task: " + data.mute ? "Mute" : "Unmute" + data.id);
-    discord_action(data);
+    console.log("Starting task: " + data.mute ? "Mute" : "Unmute" + data.id ? data.id : "everyone");
+
+    GUILD.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
+        .then(async (m) => {
+            console.log(data.mute ? "Muted " : "Unmuted " + m.user.tag);
+            await new Promise((resolve) => setTimeout(resolve, 50));
+        })
+        .catch((err) => {
+            console.log("Error: " + err);
+        }));
+
     callback();
 }, 1);
 
@@ -51,48 +60,33 @@ CLIENT.on("ready", () => {
     });
 });
 
-// mute or unmute member or everyone
-function discord_action(params) {
-    let id = params.id;
-    let mute = params.mute === "true";
-
-    if (id === "") {
-        // unmute all
-        CHANNEL.members.forEach((m) => {
-            m.setMute(false, "Tode leute reden!")
-                .then(async (m) => {
-                    console.log("Unmuted " + m.user.tag);
-
-                    // wait to not get rate-limited
-                    await new Promise((resolve) => setTimeout(resolve, 50));
-                })
-                .catch((err) => {
-                    console.log("Error:" + err);
-                });
-        });
-    } else {
-        // [un]mute member
-        GUILD.members.find((user) => user.id === id).setMute(mute, "Tode leude reden nicht!")
-            .then(async (m) => {
-                if (mute) {
-                    console.log("Muted " + m.user.tag);
-                } else {
-                    console.log("Unmuted " + m.user.tag);
-                }
-
-                // wait to not get rate-limited
-                await new Promise((resolve) => setTimeout(resolve, 50));
-            })
-            .catch((err) => {
-                console.log("Error: " + err);
-            });
-    }
-}
 
 // create Http server
 Http
     .createServer((message, response) => {
-        Queue.push(JSON.parse(JSON.stringify(message.headers)));
+
+        let params = JSON.parse(JSON.stringify(message.headers));
+        let id = params.id;
+        let mute = params.mute === "true";
+
+        console.log("Supposed to " + mute ? "mute" : "unmute" + " " + id ? id : "everyone");
+
+        if (id === "") {
+            // unmute all
+            CHANNEL.members.forEach((m) => {
+                m.setMute(false, "Tode leute reden!")
+                    .then(async (m) => {
+                        Queue.push({mute: mute, id: m.id})
+                    })
+                    .catch((err) => {
+                        console.log("Error:" + err);
+                    });
+            });
+        } else {
+            // [un]mute member
+            Queue.push({mute: mute, id: id});
+        }
+
         response.end();
     })
     .listen({port: PORT}, () => {
