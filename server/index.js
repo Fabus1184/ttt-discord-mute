@@ -19,14 +19,14 @@ const CHANNEL = [];
 
 // init queue
 const Queue = Async.queue((data, callback) => {
-    CHANNEL.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
+    data.member.setMute(data.mute, "Tode leude reden nicht!")
         .then(async (m) => {
             console.log("Task succesful: " + (data.mute ? "Muted " : "Unmuted ") + m.user.tag);
             await new Promise((resolve) => setTimeout(resolve, 50));
         })
         .catch((err) => {
             console.log("Error: " + err);
-        }));
+        })
 
     callback();
 }, 1);
@@ -47,7 +47,7 @@ CLIENT.on("ready", () => {
 
     // unmute everyone
     CHANNEL.members.forEach((member) => {
-        Queue.push({mute: false, id: member.id});
+        Queue.push({mute: false, id: member.id, member: member});
     });
 });
 
@@ -56,25 +56,13 @@ CLIENT.on("ready", () => {
 Http.createServer((message, response) => {
 
     let mute = message.headers.mute === "true";
-    let tag = CHANNEL.members.filter((member) => message.headers.id === undefined || String(member.id) === message.headers.id).map((member) => member.tag).join(", ");
+    let members = CHANNEL.members.filter((m) => (message.headers.id === undefined) || (String(m.id) === message.headers.id));
 
-    console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + tag);
+    console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + members.map((m) => m.user.tag).join(", "));
 
-    if (message.headers.id === undefined) {
-        // unmute all
-        CHANNEL.members.forEach((m) => {
-            m.setMute(false, "Tode leute reden!")
-                .then(async (m) => {
-                    Queue.push({mute: mute, id: m.id})
-                })
-                .catch((err) => {
-                    console.log("Error:" + err);
-                });
-        });
-    } else {
-        // [un]mute member
-        Queue.push({mute: mute, id: message.headers.id});
-    }
+    members.forEach((m) => {
+        Queue.push({mute: mute, id: message.headers.id, member: m});
+    });
 
     response.end();
 }).listen({port: PORT}, () => {
