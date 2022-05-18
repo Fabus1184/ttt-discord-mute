@@ -20,7 +20,7 @@ const CHANNEL = [];
 
 // init queue
 const Queue = Async.queue((data, callback) => {
-    console.log("Starting task: " + data.mute ? "Mute" : "Unmute" + data.id ? data.id : "everyone");
+    console.log("Starting task: " + (data.mute ? "Mute" : "Unmute") + (data.id !== "" ? data.id : "everyone"));
 
     GUILD.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
         .then(async (m) => {
@@ -65,11 +65,12 @@ CLIENT.on("ready", () => {
 Http
     .createServer((message, response) => {
 
-        let params = JSON.parse(JSON.stringify(message.headers));
+        let params = message.headers;
         let id = params.id;
         let mute = params.mute === "true";
 
-        console.log("Supposed to " + mute ? "mute" : "unmute" + " " + id ? id : "everyone");
+        console.log(message.headers);
+        console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + (id !== "" ? id : "everyone"));
 
         if (id === "") {
             // unmute all

@@ -23,7 +23,7 @@ else
 
 end
 
-function GET(_, mute, callback)
+function GET(id, mute, callback)
 
     http.Fetch(BOT_ADDRESS,
             function(res)
