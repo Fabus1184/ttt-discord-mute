@@ -19,7 +19,7 @@ const CHANNEL = [];
 
 // init queue
 const Queue = Async.queue((data, callback) => {
-    GUILD.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
+    CHANNEL.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
         .then(async (m) => {
             console.log("Task succesful: " + (data.mute ? "Muted " : "Unmuted ") + m.user.tag);
             await new Promise((resolve) => setTimeout(resolve, 50));
@@ -46,14 +46,8 @@ CLIENT.on("ready", () => {
     Object.assign(CHANNEL, GUILD.channels.get(CHANNEL_ID));
 
     // unmute everyone
-    CHANNEL.members.forEach((m) => {
-        m.setMute(false, "Tode leute reden doch!")
-            .then((m) => {
-                console.log("Unmuted " + m.user.tag);
-            })
-            .catch((err) => {
-                console.log("error unmuting all: " + err);
-            });
+    CHANNEL.members.forEach((member) => {
+        Queue.push({mute: false, id: member.id});
     });
 });
 
@@ -62,7 +56,7 @@ CLIENT.on("ready", () => {
 Http.createServer((message, response) => {
 
     let mute = message.headers.mute === "true";
-    let tag = GUILD.members.filter((member) => message.headers.id === undefined || member.id === message.headers.id).map((member) => member.tag).join(", ");
+    let tag = CHANNEL.members.filter((member) => message.headers.id === undefined || String(member.id) === message.headers.id).map((member) => member.tag).join(", ");
 
     console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + tag);
 
@@ -71,7 +65,7 @@ Http.createServer((message, response) => {
         CHANNEL.members.forEach((m) => {
             m.setMute(false, "Tode leute reden!")
                 .then(async (m) => {
-                    Queue.push({mute: mute, id: m.id, tag: m.user.tag})
+                    Queue.push({mute: mute, id: m.id})
                 })
                 .catch((err) => {
                     console.log("Error:" + err);
@@ -79,7 +73,7 @@ Http.createServer((message, response) => {
         });
     } else {
         // [un]mute member
-        Queue.push({mute: mute, id: message.headers.id, tag: tag});
+        Queue.push({mute: mute, id: message.headers.id});
     }
 
     response.end();
