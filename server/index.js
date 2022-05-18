@@ -5,7 +5,6 @@ const Discord = require("discord.js");
 
 // get values from config
 let config = require("./config.json");
-
 const PORT = config.port;
 const TOKEN = config.token;
 const GUILD_ID = config.guild;
@@ -20,11 +19,9 @@ const CHANNEL = [];
 
 // init queue
 const Queue = Async.queue((data, callback) => {
-    console.log("Starting task: " + (data.mute ? "Mute" : "Unmute") + (data.id !== "" ? data.id : "everyone"));
-
     GUILD.members.filter((user) => user.id === data.id).forEach((member) => member.setMute(data.mute, "Tode leude reden nicht!")
         .then(async (m) => {
-            console.log(data.mute ? "Muted " : "Unmuted " + m.user.tag);
+            console.log("Task succesful: " + (data.mute ? "Muted " : "Unmuted ") + m.user.tag);
             await new Promise((resolve) => setTimeout(resolve, 50));
         })
         .catch((err) => {
@@ -62,34 +59,30 @@ CLIENT.on("ready", () => {
 
 
 // create Http server
-Http
-    .createServer((message, response) => {
+Http.createServer((message, response) => {
 
-        let params = message.headers;
-        let id = params.id;
-        let mute = params.mute === "true";
+    let mute = message.headers.mute === "true";
+    let tag = GUILD.members.filter((member) => message.headers.id === undefined || member.id === member.headers.id).map((member) => member.tag).join(", ");
 
-        console.log(message.headers);
-        console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + (id !== "" ? id : "everyone"));
+    console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + tag);
 
-        if (id === "") {
-            // unmute all
-            CHANNEL.members.forEach((m) => {
-                m.setMute(false, "Tode leute reden!")
-                    .then(async (m) => {
-                        Queue.push({mute: mute, id: m.id})
-                    })
-                    .catch((err) => {
-                        console.log("Error:" + err);
-                    });
-            });
-        } else {
-            // [un]mute member
-            Queue.push({mute: mute, id: id});
-        }
+    if (message.headers.id === undefined) {
+        // unmute all
+        CHANNEL.members.forEach((m) => {
+            m.setMute(false, "Tode leute reden!")
+                .then(async (m) => {
+                    Queue.push({mute: mute, id: m.id, tag: m.user.tag})
+                })
+                .catch((err) => {
+                    console.log("Error:" + err);
+                });
+        });
+    } else {
+        // [un]mute member
+        Queue.push({mute: mute, id: message.headers.id, tag: tag});
+    }
 
-        response.end();
-    })
-    .listen({port: PORT}, () => {
-        console.log("http server up and running on port " + PORT);
-    });
+    response.end();
+}).listen({port: PORT}, () => {
+    console.log("HTTP server up and running on port " + PORT);
+});

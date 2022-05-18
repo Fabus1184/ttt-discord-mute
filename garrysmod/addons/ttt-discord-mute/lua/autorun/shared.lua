@@ -19,7 +19,7 @@ if (ids_raw) then
 
 else
 
-    print("ERROR: can't read data" .. FILEPATH)
+    print("ERROR: can't read data" .. USER_FILEPATH)
 
 end
 
