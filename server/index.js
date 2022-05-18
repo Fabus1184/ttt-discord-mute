@@ -62,7 +62,7 @@ CLIENT.on("ready", () => {
 Http.createServer((message, response) => {
 
     let mute = message.headers.mute === "true";
-    let tag = GUILD.members.filter((member) => message.headers.id === undefined || member.id === member.headers.id).map((member) => member.tag).join(", ");
+    let tag = GUILD.members.filter((member) => message.headers.id === undefined || member.id === message.headers.id).map((member) => member.tag).join(", ");
 
     console.log("I'm supposed to " + (mute ? "mute" : "unmute") + " " + tag);
 
